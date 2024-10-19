@@ -124,82 +124,110 @@ def plotWordCloud(option):
     st.pyplot(fig)
 
 # Función para generar histograma de palabras más frecuentes
-def plotTopWordsHistogram(option):
+import plotly.express as px
+
+# Función para generar histograma interactivo de palabras más frecuentes
+def plotTopWordsHistogramInteractive(option):
     if option == 'Desastres':
         title = 'Desastres'
         topWords = disasterWordFreqDf.head(10)
     else:
         title = 'No Desastres'
         topWords = nonDisasterWordFreqDf.head(10)
-    
-    # Crear el histograma
-    fig, ax = plt.subplots(figsize=(12, 6))
-    sns.barplot(x='Frequency', y='Word', data=topWords, palette='colorblind', ax=ax)
-    ax.set_xlabel('Frecuencia')
-    ax.set_ylabel('Palabras')
-    ax.set_title(f'Top 10 Palabras Más Frecuentes - {title}')
-    ax.legend().remove()
-    st.pyplot(fig)
+
+    # Crear el histograma interactivo con Plotly
+    fig = px.bar(topWords, 
+                 x='Frequency', 
+                 y='Word', 
+                 orientation='h',  # Barra horizontal
+                 title=f'Top 10 Palabras Más Frecuentes - {title}',
+                 labels={'Frequency': 'Frecuencia', 'Word': 'Palabra'},
+                 color='Frequency',  # Color basado en frecuencia
+                 color_continuous_scale='Blues')  # Escala de color
+
+    fig.update_layout(
+        xaxis_title="Frecuencia",
+        yaxis_title="Palabras",
+        template="plotly_white",
+        hovermode="closest"  # Habilitar hover
+    )
+
+    # Mostrar la gráfica en Streamlit
+    st.plotly_chart(fig)
 
 
-def bigramAnalysis(tokenizedTextColumn, targetColumn, label):
+def bigramAnalysisInteractive(tokenizedTextColumn, targetColumn, label):
 
     if label == 'Desastres':
         selectedTweets = tokenizedTextColumn[targetColumn == 1]
     else:
         selectedTweets = tokenizedTextColumn[targetColumn == 0]
-    
+
     def generate_ngrams(selectedTweets, n):
         ngramsList = [ngram for tokens in selectedTweets for ngram in ngrams(tokens, n)]
         ngramCounts = Counter(ngramsList)
         ngramFreqDf = pd.DataFrame(ngramCounts.items(), columns=[f'{n}-gram', 'Frequency']).sort_values(by='Frequency', ascending=False)
-        topNgrams = ngramFreqDf.head(10)
-        return topNgrams
-    
-    # Generar bi-gramas y tri-gramas
+        return ngramFreqDf.head(10)
+
+    # Generar bi-gramas
     bigrams = generate_ngrams(selectedTweets, 2)
-    
-    # Usar paleta colorblind para los colores de las barras
-    palette = sns.color_palette("colorblind", 1)
-    
-    # Graficar bi-gramas
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.barh([' '.join(ngram) for ngram in bigrams['2-gram']], bigrams['Frequency'], color=palette[0])
-    ax.set_xlabel('Frecuencia')
-    ax.set_ylabel('Bi-gramas')
-    ax.set_title(f'Top 10 Bi-gramas - {label}')
-    ax.invert_yaxis()
-    st.pyplot(fig)
+
+    # Crear el gráfico interactivo
+    fig = px.bar(bigrams, 
+                 x='Frequency', 
+                 y=bigrams['2-gram'].apply(lambda x: ' '.join(x)),  # Unir los bigramas
+                 orientation='h',
+                 title=f'Top 10 Bi-gramas - {label}',
+                 labels={'Frequency': 'Frecuencia', '2-gram': 'Bi-grama'},
+                 color='Frequency',
+                 color_continuous_scale='Oranges')
+
+    fig.update_layout(
+        xaxis_title="Frecuencia",
+        yaxis_title="Bi-gramas",
+        template="plotly_white",
+        hovermode="closest"
+    )
+
+    # Mostrar la gráfica en Streamlit
+    st.plotly_chart(fig)
     
 # Función para análisis de n-gramas
-def trigramAnalysis(tokenizedTextColumn, targetColumn, label):
+def trigramAnalysisInteractive(tokenizedTextColumn, targetColumn, label):
 
     if label == 'Desastres':
         selectedTweets = tokenizedTextColumn[targetColumn == 1]
     else:
         selectedTweets = tokenizedTextColumn[targetColumn == 0]
-    
+
     def generate_ngrams(selectedTweets, n):
         ngramsList = [ngram for tokens in selectedTweets for ngram in ngrams(tokens, n)]
         ngramCounts = Counter(ngramsList)
         ngramFreqDf = pd.DataFrame(ngramCounts.items(), columns=[f'{n}-gram', 'Frequency']).sort_values(by='Frequency', ascending=False)
-        topNgrams = ngramFreqDf.head(10)
-        return topNgrams
-    
-    # Generar bi-gramas y tri-gramas
+        return ngramFreqDf.head(10)
+
+    # Generar tri-gramas
     trigrams = generate_ngrams(selectedTweets, 3)
-    
-    # Usar paleta colorblind para los colores de las barras
-    palette = sns.color_palette("colorblind", 1)
-    
-    # Graficar tri-gramas
-    fig, ax = plt.subplots(figsize=(12, 6))
-    ax.barh([' '.join(ngram) for ngram in trigrams['3-gram']], trigrams['Frequency'], color=palette[0])
-    ax.set_xlabel('Frecuencia')
-    ax.set_ylabel('Tri-gramas')
-    ax.set_title(f'Top 10 Tri-gramas - {label}')
-    ax.invert_yaxis()
-    st.pyplot(fig)
+
+    # Crear el gráfico interactivo
+    fig = px.bar(trigrams, 
+                 x='Frequency', 
+                 y=trigrams['3-gram'].apply(lambda x: ' '.join(x)),  # Unir los trigramas
+                 orientation='h',
+                 title=f'Top 10 Tri-gramas - {label}',
+                 labels={'Frequency': 'Frecuencia', '3-gram': 'Tri-grama'},
+                 color='Frequency',
+                 color_continuous_scale='Reds')
+
+    fig.update_layout(
+        xaxis_title="Frecuencia",
+        yaxis_title="Tri-gramas",
+        template="plotly_white",
+        hovermode="closest"
+    )
+
+    # Mostrar la gráfica en Streamlit
+    st.plotly_chart(fig)
 
 # Configurar la página para que use el ancho completo
 st.set_page_config(layout="wide")  # Añade esta línea para hacer que el diseño sea "wide"
@@ -220,14 +248,14 @@ with col1:
 # Segunda columna: Top 10 palabras más frecuentes
 with col2:
     st.subheader('Top 10 Palabras más frecuentes')
-    plotTopWordsHistogram(option)
+    plotTopWordsHistogramInteractive(option)
 
     st.subheader('Bi-Gramas')
-    bigramAnalysis(tokenizedText, dataTrain['target'], label=option)
+    bigramAnalysisInteractive(tokenizedText, dataTrain['target'], label=option)
 
 # Trigrams en la cuarta columna
 
 col3, col4, col5 = st.columns(3)
 with col5:
     st.subheader('Tri-Gramas')
-    trigramAnalysis(tokenizedText, dataTrain['target'], label=option)
+    trigramAnalysisInteractive(tokenizedText, dataTrain['target'], label=option)
